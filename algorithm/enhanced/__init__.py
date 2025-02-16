@@ -14,7 +14,7 @@ def run():
     for run in range(num_runs):
         print(f"Run {run + 1}/{num_runs}")
         start = time.time()
-        soln_best, soln_best_tracker = tabu_search(soln_init)
+        soln_best, soln_best_tracker, conv_rate_list = tabu_search(soln_init)
         end = time.time()
         exec_time.append(end - start)
 
@@ -29,5 +29,8 @@ def run():
     avg_soln = sum(soln_lst) / len(soln_lst)
     dif = ((max(soln_lst) - min(soln_lst)) / (sum(soln_lst) / len(soln_lst))) * 100
     avg_time = sum(exec_time) / len(exec_time)
+    avg_conv = sum(conv_rate_list) / len(conv_rate_list)
 
-    return avg_soln, dif, avg_time
+    print(conv_rate_list)
+
+    return avg_soln, dif, avg_time, avg_conv

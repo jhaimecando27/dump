@@ -1,6 +1,7 @@
 import math
 import random
 import pandas as pd
+import time
 
 
 distance_matrix: list[list[int]] = pd.read_csv("data/input/20.csv").values[:, 1:]
@@ -91,6 +92,7 @@ def neighborhood(soln: list[int], tabu_list: list[list[int]]) -> list[list[int]]
     return nbhd
 
 
+# OBJ1
 def new_neighborhood(
     soln: list[int], tabu_list: list[list[int]], stagnant_ctr: int
 ) -> list[list[int]]:
@@ -119,6 +121,24 @@ def new_neighborhood(
             soln_mod[i], soln_mod[j] = soln_mod[j], soln_mod[i]
             nbhd.append(soln_mod)
     return nbhd
+
+
+def adaptive_stopping_criteria(stagnant_total: int, conv_ctr: int, time_start):
+
+    stagnant_max: int = 10
+    conv_max: int = 20
+    max_time = 10
+
+    if stagnant_total >= stagnant_max:
+        return True
+
+    #if conv_ctr >= conv_max:
+    #    return True
+
+    if (time_start - time.time()) >= max_time:
+        return True
+
+    return False
 
 
 def best_admissible_soln(

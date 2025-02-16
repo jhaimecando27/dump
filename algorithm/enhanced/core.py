@@ -1,10 +1,13 @@
 import math
+import time
+
 from algorithm.enhanced.utils import (
     neighborhood,
-    new_neighborhood,
     best_admissible_soln,
     val,
     dynamic_tenure,
+    adaptive_stopping_criteria,
+    new_neighborhood,
 )
 
 iter_max: int = 100
@@ -24,8 +27,13 @@ def tabu_search(soln_init: list[int]) -> tuple[list[int], list[int], list[int]]:
     tabu_list: list = []
     soln_curr: list[int] = soln_init
     soln_best: list[int] = soln_init
+    time_start = time.time()
 
-    prev_error: float = float("inf")
+    prev_error: float = 0
+    curr_error: float = 0
+    conv_rate: float = 0
+    conv_ctr: int = 0
+    conv_treshold: float = 0.01
 
     # OBJ3
     poi_num = len(soln_init)
@@ -36,6 +44,7 @@ def tabu_search(soln_init: list[int]) -> tuple[list[int], list[int], list[int]]:
     stagnant_total: int = 0
     progress_ctr: int = 0
     soln_best_tracker: list = []
+    conv_rate_list: list = []
 
     for iter_ctr in range(iter_max):
 
@@ -56,19 +65,20 @@ def tabu_search(soln_init: list[int]) -> tuple[list[int], list[int], list[int]]:
                 stagnant_total += 1
 
         # Convergence Rate calculation
-        curr_error = (
-            abs(val(soln_best) - soln_best_tracker[-2])
-            if len(soln_best_tracker) > 1
-            else float("inf")
-        )
-        if prev_error > 0:
-            convergence_rate = curr_error / prev_error
+        if len(soln_best_tracker) >= 1:
+            curr_error = val(soln_best) - soln_best_tracker[-1]
+
+            if prev_error != 0:
+                conv_rate = curr_error / prev_error
+                conv_rate_list.append(conv_rate)
+
+            if conv_rate <= conv_treshold:
+                conv_ctr += 1
+
         prev_error = curr_error
 
         # Update tenure dynamically
-        tabu_tenure = dynamic_tenure(
-            tabu_tenure, convergence_rate, stagnant_ctr, progress_ctr
-        )
+        tabu_tenure = dynamic_tenure(tabu_tenure, conv_rate, stagnant_ctr, progress_ctr)
 
         soln_curr = nbhr_best
         soln_best_tracker.append(val(soln_best))
@@ -78,4 +88,9 @@ def tabu_search(soln_init: list[int]) -> tuple[list[int], list[int], list[int]]:
         if len(tabu_list) > tabu_tenure:
             tabu_list.pop(0)
 
-    return soln_best, soln_best_tracker
+        #if adaptive_stopping_criteria(
+        #    stagnant_total=stagnant_total, conv_ctr=conv_ctr, time_start=time_start
+        #):
+        #    break
+
+    return soln_best, soln_best_tracker, conv_rate_list
